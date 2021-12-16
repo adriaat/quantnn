@@ -202,8 +202,8 @@ class QRNN(NeuralNetworkModel):
             return t.invert(x)
 
         if self.transformation is None:
-            return self.model.predict(x)
-        return apply(transform, self.model.predict(x), self.transformation)
+            return self.model(x)
+        return apply(transform, self.model(x), self.transformation)
 
     def cdf(self, x=None, y_pred=None, **kwargs):
         r"""
