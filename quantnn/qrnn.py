@@ -127,8 +127,10 @@ class QRNN(NeuralNetworkModel):
         logger=None,
         metrics=None,
         keys=None,
+        loss=None
     ):
         """
+        TODO: Update docstring with loss
         Train the underlying neural network model on given training data.
 
         The training data can be provided as either as tuples ``(x, y)``
@@ -160,7 +162,8 @@ class QRNN(NeuralNetworkModel):
             keys: Keys to use to determine input (``x``) and expected output
                  (``y``) when dataset elements are given as dictionaries.
         """
-        loss = self.backend.QuantileLoss(self.quantiles, mask=mask)
+        if loss is None:
+            loss = self.backend.QuantileLoss(self.quantiles, mask=mask)
         return super().train(
             training_data,
             loss,
