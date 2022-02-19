@@ -747,6 +747,16 @@ class PytorchModel:
 
                 errors = {}
 
+                # TODO: Not a TODO, but to raise awareness in the text editor
+                # This removes any running stats computed during the epoch
+                # and replaces them with simple average of each batch stats
+                # Note that the model must have the attribute
+                # batchnorm_population_stats which lies on the user's
+                # responsibility (it can be set in the train scripts)
+                if hasattr(self, 'batchnorm_population_stats'):
+                    if self.batchnorm_population_stats:
+                        self._compute_batchnorm_population_stats(training_data, keys, device)
+
                 if validation_data is not None:
                     n = 0
                     epoch_error = 0
@@ -814,6 +824,37 @@ class PytorchModel:
         logger.training_end()
 
         # self.eval() # Keep the model in training state
+    
+    def _compute_batchnorm_population_stats(self, training_data, keys, device):
+
+        # First reset the stats of all batchnorm layers
+        for m in self.modules():
+            if isinstance(m, nn.modules.batchnorm._BatchNorm):
+                # Clear any running stats
+                # From https://github.com/pytorch/pytorch/blob/3aecce70152579a01e969b8ea1540f301290fe5a/torch/nn/modules/batchnorm.py#L65
+                m.reset_running_stats()
+                # Set momentum to None to compute simple average of batch stats
+                m.momentum = None
+                # The module must be in training state
+                m.training = True
+                # and this to update the stats
+                m.track_running_stats = True
+
+        # Then make one pass of the training data through the network
+        with torch.no_grad():
+            for data in training_data:
+                x, _ = _get_x_y(data, keys)
+                if not isinstance(x, torch.Tensor):
+                    if isinstance(x, Iterable):
+                        x = [x_i.float().to(device) for x_i in x]
+                    else:
+                        raise ValueError(
+                            "Batch input 'x' should be a torch.Tensor or"
+                            " an Iterable of tensors."
+                        )
+                else:
+                    x = x.float().to(device)
+                _ = self(x)
 
     def predict(self, x, device="cpu"):
         """
