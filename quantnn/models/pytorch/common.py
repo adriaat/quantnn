@@ -829,7 +829,7 @@ class PytorchModel:
 
         # First reset the stats of all batchnorm layers
         for m in self.modules():
-            if isinstance(m, nn.modules.batchnorm._BatchNorm):
+            if issubclass(type(m), nn.modules.batchnorm._BatchNorm):
                 # Clear any running stats
                 # From https://github.com/pytorch/pytorch/blob/3aecce70152579a01e969b8ea1540f301290fe5a/torch/nn/modules/batchnorm.py#L65
                 m.reset_running_stats()
