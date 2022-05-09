@@ -9,6 +9,7 @@ from copy import copy
 
 import numpy as np
 from scipy.stats import norm
+import torch
 
 from quantnn.common import InvalidDimensionException
 from quantnn.generic import (
@@ -85,7 +86,13 @@ def cdf(y_pred, quantiles, quantile_axis=1):
     selection_r = tuple(selection_r)
     dx = y_pred[selection_r] - y_pred[selection_c]
     dx /= quantiles[1] - quantiles[0]
-    x_cdf_l = y_pred[selection_c] - 1.0 * quantiles[0] * dx
+    # Clip
+    zeros_array = zeros(xp, dx.shape, like=dx)
+    if xp == np:
+        x_cdf_l = np.maximum(y_pred[selection_c] - 1.0 * quantiles[0] * dx, zeros_array)
+    elif xp == torch:
+        x_cdf_l = torch.maximum(y_pred[selection_c] - 1.0 * quantiles[0] * dx, zeros_array)
+
     x_cdf_l = expand_dims(xp, x_cdf_l, quantile_axis)
 
     selection_l = copy(selection)
