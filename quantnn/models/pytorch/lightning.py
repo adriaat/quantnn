@@ -325,7 +325,7 @@ class QuantnnLightning(pl.LightningModule):
     def configure_optimizers(self):
 
         staged = False
-        if isinstance(self.optimizer, list) or isinstace(self.scheduler, list):
+        if isinstance(self.optimizer, list) or isinstance(self.scheduler, list):
             staged = True
 
         if self.optimizer is None:
